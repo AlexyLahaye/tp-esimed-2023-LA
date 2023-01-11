@@ -5,7 +5,7 @@ const users = [];
 let id_serialise = 0;
 
 app.use(express.json());
-
+//journalisation
 app.use((req, res, next) => {
     console.log('%s', req);
     next();
