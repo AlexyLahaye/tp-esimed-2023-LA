@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { DateTime } = require('luxon');
-const { expressjwt: jwt} = require('express-jwt')
+const { expressjwt: jwt} = require('express-jwt');
 
 const initJsonHandlerMiddlware = (app) => app.use(express.json());
 const publicrepertory = (app) => app.use(express.static('public'));

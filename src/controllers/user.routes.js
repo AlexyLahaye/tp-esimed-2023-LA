@@ -3,6 +3,8 @@ const router = express.Router();
 const userRepository = require('../models/user-repository');
 const { Sequelize, Model, DataTypes } = require('sequelize');
 const { body, validationResult } = require('express-validator');
+const guard = require('express-jwt-permissions')({requestProperty: 'auth'});
+
 
 router.get('/', (req, res) => {
     res.send(userRepository.getUsers());
@@ -24,7 +26,7 @@ router.get('/test-sqlite',async(req,res) => {
     const users = await User.findAll();
     res.send(users);
 });
-router.get('/:firstName', async(req, res) => {
+router.get('/:firstName',guard.check('admin'), async(req, res) => {
     const foundUser = await userRepository.getUserByFirstName(req.params.firstName);
 
     if (!foundUser) {
@@ -46,13 +48,13 @@ router.post('/',body('firstName').not().isEmpty(),body('password').isAlphanumeri
     res.status(201).end();
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id',guard.check('admin'), async (req, res) => {
     await userRepository.updateUser(req.params.id, req.body);
     res.status(204).end();
 });
 
-router.delete('/:id', (req, res) => {
-    userRepository.deleteUser(req.params.id);
+router.delete('/:id',guard.check('admin'), async (req, res) => {
+    await userRepository.deleteUser(req.params.id);
     res.status(204).end();
 });
 

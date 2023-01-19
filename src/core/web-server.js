@@ -11,6 +11,7 @@ class WebServer {
 
     constructor() {
         this.app = express();
+        require('dotenv').config()
         sequelize.sync();
         initializeConfigMiddlewares(this.app);
         this._initializeRoutes();
