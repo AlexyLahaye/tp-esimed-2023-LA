@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const userRepository = require('../models/user-repository');
 const { Sequelize, Model, DataTypes } = require('sequelize');
+const { body, validationResult } = require('express-validator');
 
 router.get('/', (req, res) => {
     res.send(userRepository.getUsers());
@@ -23,8 +24,8 @@ router.get('/test-sqlite',async(req,res) => {
     const users = await User.findAll();
     res.send(users);
 });
-router.get('/:firstName', (req, res) => {
-    const foundUser = userRepository.getUserByFirstName(req.params.firstName);
+router.get('/:firstName', async(req, res) => {
+    const foundUser = await userRepository.getUserByFirstName(req.params.firstName);
 
     if (!foundUser) {
         throw new Error('User not found');
@@ -33,19 +34,20 @@ router.get('/:firstName', (req, res) => {
     res.send(foundUser);
 });
 
-router.post('/', (req, res) => {
-    const existingUser = userRepository.getUserByFirstName(req.body.firstName);
+router.post('/',body('firstName').not().isEmpty(),body('password').isAlphanumeric().isLength({min:5}), async (req, res) => {
+    const existingUser = await userRepository.getUserByFirstName(req.body.firstName);
 
     if (existingUser) {
-        throw new Error('Unable to create the user');
+        res.status(500).end();
+        return;
     }
 
-    userRepository.createUser(req.body);
+    await userRepository.createUser(req.body);
     res.status(201).end();
 });
 
-router.put('/:id', (req, res) => {
-    userRepository.updateUser(req.params.id, req.body);
+router.put('/:id', async (req, res) => {
+    await userRepository.updateUser(req.params.id, req.body);
     res.status(204).end();
 });
 

@@ -1,40 +1,38 @@
-const { users } = require('./db');
 const uuid = require('uuid');
-const md5 = require('md5');
+const {User} = require('./user.model.js');
+const bcrypt = require('bcryptjs');
 
-exports.getUsers = () => users;
 
-exports.getUserByFirstName = (firstName) => {
-    return users.find((user) => user.firstName == firstName);
+exports.getUsers = async () => await User.findAll();
+
+exports.getUserByFirstName = async (firstName) => {
+    return await User.findOne({ where: { firstName } });
 };
 
-exports.createUser = (body) => {
-    const hashedPassword = md5(body.password);
+exports.createUser = async (body) => {
+    const salt = bcrypt.genSaltSync(12);
+    const hashedPdw = bcrypt.hashSync(body.password, salt);
     const user = body;
     user.id = uuid.v4();
-    user.password = hashedPassword;
+    user.password = hashedPdw;
 
-    users.push(user);
+    await User.create(user);
 };
 
-exports.updateUser = (id, data) => {
-    const foundUser = users.find((user) => user.id == id);
+exports.updateUser = async (id, data) => {
+    const foundUser = await User.findOne({ where: { id } });
 
     if (!foundUser) {
         throw new Error('User not found');
     }
 
-    foundUser.firstName = data.firstName || foundUser.firstName;
-    foundUser.lastName = data.lastName || foundUser.lastName;
-    foundUser.password = data.password ? md5(data.password) : foundUser.password;
+    await User.update({
+        firstName: data.firstName || foundUser.firstName,
+        lastName: data.lastName || foundUser.lastName,
+        password: data.password ? md5(data.password) : foundUser.password,
+    }, { where: { id } });
 };
 
-exports.deleteUser = (id) => {
-    const userIndex = users.findIndex((user) => user.id == id);
-
-    if (userIndex === -1) {
-        throw new Error('User not foud');
-    }
-
-    users.splice(userIndex, 1);
+exports.deleteUser = async (id) => {
+    await User.destroy({ where: { id } });
 }
